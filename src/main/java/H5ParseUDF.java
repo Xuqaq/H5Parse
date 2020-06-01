@@ -1,3 +1,4 @@
+import com.alibaba.fastjson.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -45,9 +46,71 @@ public class H5ParseUDF {
         String text = "";
         return text;
     }
-    public static String parsePic(Elements contentDivs){
-        String pics = "";
-        return pics;
+    public static StringBuilder parsePic(Element contentDivs){
+        StringBuilder srcs = new StringBuilder();
+        int pic_cnt = 0;
+        for (Element element : contentDivs.getAllElements()) {
+            if ("img".equalsIgnoreCase(element.tag().getName())) {
+                String src = element.attr("src");
+                if (src.contains("p1.meituan.net")
+                        || src.contains("p0.meituan.com")
+                        || src.contains("p0.meituan.net")
+                        || src.contains("p1.meituan.net")
+                        || src.contains("p1.meituan.com")
+                        || src.contains("vfile.meituan.net")
+                        || src.contains("osp.meituan.net")
+                        || src.contains("img.meituan.net")) {
+                    if (src != null && !"".equalsIgnoreCase(src) && src.contains("http")) {
+                        if (src.contains("\"")) {
+                            Matcher matcher = pattern.matcher(src);
+                            if (matcher.find(1)) {
+                                srcs.append(matcher.group(1) + ";");
+                                pic_cnt++;
+                            }
+                        } else {
+                            srcs.append(src + ";");
+                            pic_cnt++;
+                        }
+                    } else if (src != null && !"".equalsIgnoreCase(src)) {
+                        srcs.append("https:" + src + ";");
+                    }
+                }
+            } else if (element.attr("style").contains("background-image") || (element.attr("style").contains("background") && element.attr("style").contains("url"))) {
+                String attr = element.attr("style");
+                if (attr.contains("p1.meituan.net")
+                        || attr.contains("p0.meituan.com")
+                        || attr.contains("p0.meituan.net")
+                        || attr.contains("p1.meituan.net")
+                        || attr.contains("p1.meituan.com")
+                        || attr.contains("vfile.meituan.net")
+                        || attr.contains("osp.meituan.net")
+                        || attr.contains("img.meituan.net")) {
+                    if (attr.contains("&quot;")) {
+                        if (attr.contains("https")) {
+                            srcs.append(attr.substring(attr.indexOf("https://"), attr.indexOf("&quot;")) + ";");
+                            pic_cnt++;
+
+                        } else if (attr.contains("http")) {
+                            srcs.append(attr.substring(attr.indexOf("http://"), attr.indexOf("&quot;")) + ";");
+                            pic_cnt++;
+
+                        }
+                    } else {
+                        if (attr.contains("https")) {
+                            srcs.append(attr.substring(attr.indexOf("https://"), attr.indexOf(")")).replaceAll("\"", "") + ";");
+                            pic_cnt++;
+
+                        } else if (attr.contains("http")) {
+                            srcs.append(attr.substring(attr.indexOf("http://"), attr.indexOf(")")).replaceAll("\"", "") + ";");
+                            pic_cnt++;
+                        }
+
+                    }
+                }
+
+            }
+        }
+        return srcs;
     }
 
     public static String parseDetails(String str) {
@@ -69,7 +132,8 @@ public class H5ParseUDF {
 
         // body
 //        int modelIndex = 1;
-        TreeMap<String, TreeMap> modelTreeMap = new TreeMap<String, TreeMap>();
+//        TreeMap<String, TreeMap> modelTreeMap = new TreeMap<String, TreeMap>();
+        JSONObject treeMap = new JSONObject();
         List<Node> bodyChilds =  doc.getElementsByTag("body").get(0).childNodes();
         // 解析第一层 取到content
         for(Node bodyElment1 : bodyChilds){ // body儿子
@@ -80,10 +144,10 @@ public class H5ParseUDF {
                             for(Node bodyElment3: bodyElment2.childNodes()){
                                 if(bodyElment3.getClass().toString().equals("class org.jsoup.nodes.Element") && ((Element) bodyElment3).tag().toString().equals("div")){
                                     // 解析 bodyElment2 中的text和图片
-//                                    System.out.println(((Element) bodyElment3).text());
-//                                    System.out.println("________________________");
+                                    System.out.println("________________________");
                                     String text = ((Element) bodyElment3).text();
                                     System.out.println(text);
+                                    System.out.println(parsePic((Element) bodyElment3));
                                 }
                             }
                         }
@@ -91,18 +155,6 @@ public class H5ParseUDF {
                 }
             }
 
-//        int len = bodyChilds.size();
-//        for(int i=0;i<len;i++){
-//            System.out.println(bodyChilds.get(i).getClass().toString());
-//        }
-
-//            Elements contentDivs = bodyElement.getElementsByTag("div");
-//            // 解析层 存入model  key为model名字
-//            TreeMap<String, String> modelValue = new TreeMap<String, String>();
-//            modelValue.put("Context", parseText(contentDivs));
-//            modelValue.put("Pics",parsePic(contentDivs));
-////            modelTreeMap.put(contentDivs.get)
-//        }
 
         //图片
         StringBuilder srcs = new StringBuilder();
