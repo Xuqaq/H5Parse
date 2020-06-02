@@ -118,12 +118,12 @@ public class H5ParseUDF {
         double score = 0.0;
         Pattern pattern = Pattern.compile("\"(.*)\\\\\"");
         Document doc = Jsoup.parse(str);
-        com.alibaba.fastjson.JSONObject jsonObject = new com.alibaba.fastjson.JSONObject();
+        JSONObject jsonObject = new JSONObject();
         //文本
         String total = doc.text();
 
         //head
-        String title = doc.getElementsByTag("head").first().getElementsByTag("title").text();
+//        String title = doc.getElementsByTag("head").first().getElementsByTag("title").text();
         Elements metas = doc.getElementsByTag("head").first().getElementsByTag("meta");
         for (Element element : metas) {
             if (meta_set.contains(element.attr("name"))) {
@@ -138,20 +138,28 @@ public class H5ParseUDF {
         // 解析第一层 取到content
         for(Node bodyElment1 : bodyChilds){ // body儿子
             // 解析body 中的div
-            if(bodyElment1.getClass().toString().equals("class org.jsoup.nodes.Element") && ((Element) bodyElment1).tag().toString().equals("div")) {
+            if(bodyElment1.getClass().toString().equals("class org.jsoup.nodes.Element") && (((Element) bodyElment1).tag().toString().equals("div") ||((Element) bodyElment1).tag().toString().equals("section")||((Element) bodyElment1).tag().toString().equals("mieta"))) {
                 for(Node bodyElment2: bodyElment1.childNodes()){ // body孙子
-                        if(bodyElment2.getClass().toString().equals("class org.jsoup.nodes.Element") && ((Element) bodyElment2).tag().toString().equals("div")){
+                        if(bodyElment2.getClass().toString().equals("class org.jsoup.nodes.Element") && (((Element) bodyElment2).tag().toString().equals("div") ||((Element) bodyElment2).tag().toString().equals("section"))){
                             for(Node bodyElment3: bodyElment2.childNodes()){
-                                if(bodyElment3.getClass().toString().equals("class org.jsoup.nodes.Element") && ((Element) bodyElment3).tag().toString().equals("div")){
+                                if(bodyElment3.getClass().toString().equals("class org.jsoup.nodes.Element") && (((Element) bodyElment3).tag().toString().equals("div") ||((Element) bodyElment3).tag().toString().equals("section"))){
                                     // 解析 bodyElment2 中的text和图片
 //                                    System.out.println("________________________");
                                     String text = ((Element) bodyElment3).text();
 //                                    System.out.println(text);
 //                                    System.out.println(parsePic((Element) bodyElment3));
                                     JSONObject object = new JSONObject();
+                                    Elements titleElement = ((Element) bodyElment3).getElementsByAttributeValueContaining("class","title");
+                                    String title = "";
+                                    if(titleElement.size()>0){
+                                        title = ((Element) bodyElment3).getElementsByAttributeValueContaining("class","title").get(0).text();
+                                    }
+                                    object.put("title",title);
                                     object.put("context",text);
                                     object.put("pics",parsePic((Element) bodyElment3));
-                                    treeMap.add(object);
+                                    if(object.getString("context").length()!=0 || object.getString("pics").length()!=0||object.getString("title").length()!=0){
+                                        treeMap.add(object);
+                                    }
                                 }
                             }
                         }
@@ -164,7 +172,7 @@ public class H5ParseUDF {
 
     public static void main(String[] args) throws IOException {
 //        FileReader fileReader = new FileReader("context.html");
-        File f = new File("/Users/xuyonghui/IdeaProjects/H5Parse/src/main/java/index.html");
+        File f = new File("/Users/xuyonghui/IdeaProjects/H5Parse/src/main/java/test.html");
         // 输入流
         InputStreamReader fileReader = new InputStreamReader(new FileInputStream(f), "UTF-8");
 
@@ -176,5 +184,9 @@ public class H5ParseUDF {
         }
         String re = sb.toString().replaceAll("儑","=").replaceAll("\t","").replaceAll("\t","");
         System.out.println(parseDetails(re));
+        String url = "https://m.dianping.com/rankinglist/index?rankKey儑f43d2308e7041e4af211555a9c039e2864d356bebd2fb49e77632af09377fa0f";
+        url = url.replaceAll("儑","=").replaceAll("\t","").replaceAll("\t","");
+        System.out.println((url));
+
     }
 }
