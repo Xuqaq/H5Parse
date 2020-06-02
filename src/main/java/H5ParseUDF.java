@@ -4,21 +4,13 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
-import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 
+import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.io.File;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.io.InputStreamReader;
-import java.io.FileInputStream;
 
 
 public class H5ParseUDF {
@@ -42,10 +34,6 @@ public class H5ParseUDF {
         } catch (Exception e) {
             return "";
         }
-    }
-    public  static String parseText(Elements contentDivs){
-        String text = "";
-        return text;
     }
     public static StringBuilder parsePic(Element contentDivs){
         StringBuilder srcs = new StringBuilder();
@@ -119,17 +107,7 @@ public class H5ParseUDF {
         Pattern pattern = Pattern.compile("\"(.*)\\\\\"");
         Document doc = Jsoup.parse(str);
         JSONObject jsonObject = new JSONObject();
-        //文本
-        String total = doc.text();
 
-        //head
-//        String title = doc.getElementsByTag("head").first().getElementsByTag("title").text();
-        Elements metas = doc.getElementsByTag("head").first().getElementsByTag("meta");
-        for (Element element : metas) {
-            if (meta_set.contains(element.attr("name"))) {
-                jsonObject.put(element.attr("name"), element.attr("content"));
-            }
-        }
 
         // body
         JSONArray treeMap = new JSONArray();
@@ -154,6 +132,9 @@ public class H5ParseUDF {
                                     if(titleElement.size()>0){
                                         title = ((Element) bodyElment3).getElementsByAttributeValueContaining("class","title").get(0).text();
                                     }
+                                    else{
+                                        title = ((Element) bodyElment3).text().split(" ")[0];
+                                    }
                                     object.put("title",title);
                                     object.put("context",text);
                                     object.put("pics",parsePic((Element) bodyElment3));
@@ -169,7 +150,6 @@ public class H5ParseUDF {
         return treeMap.toString();
     }
 
-
     public static void main(String[] args) throws IOException {
 //        FileReader fileReader = new FileReader("context.html");
         File f = new File("/Users/xuyonghui/IdeaProjects/H5Parse/src/main/java/test.html");
@@ -184,9 +164,9 @@ public class H5ParseUDF {
         }
         String re = sb.toString().replaceAll("儑","=").replaceAll("\t","").replaceAll("\t","");
         System.out.println(parseDetails(re));
-        String url = "https://m.dianping.com/rankinglist/index?rankKey儑f43d2308e7041e4af211555a9c039e2864d356bebd2fb49e77632af09377fa0f";
+        String url = "https://i.meituan.com/awp/ia/i-zhenguo-activity/feishuibuke/index.html?phx_wake_up_type儑dpapp_entry&phx_wake_up_source儑hotel_home_page_tab&phx_ad_delivery_id儑static_slot%3A7667%3A41&phx_from儑cube_37925";
         url = url.replaceAll("儑","=").replaceAll("\t","").replaceAll("\t","");
         System.out.println((url));
-
+//
     }
 }
